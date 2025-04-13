@@ -1,5 +1,5 @@
 <template>
-  <div id="app">
+  <div id="app" class="light-mode">
     <Game />
   </div>
 </template>
@@ -14,3 +14,10 @@ export default {
   }
 };
 </script>
+
+<style>
+.light-mode {
+  background-color: #fff;
+  color: #000;
+}
+</style>

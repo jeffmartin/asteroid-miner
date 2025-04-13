@@ -500,4 +500,43 @@ button:disabled {
 .fade-enter, .fade-leave-to {
   opacity: 0;
 }
+body {
+  background-color: #ffffff;
+  color: #333333;
+  margin: 0;
+  font-family: 'Arial', sans-serif;
+  touch-action: manipulation;
+}
+
+button {
+  background-color: #f0f0f0;
+  color: #000000;
+}
+
+input, select, textarea {
+  background-color: #ffffff;
+  color: #000000;
+}
+
+.achievement-card {
+  background-color: #ffffff;
+  color: #000000;
+}
+
+@media (prefers-color-scheme: dark) {
+  body {
+    background-color: #121212;
+    color: #eeeeee;
+  }
+
+  button {
+    background-color: #333;
+    color: #fff;
+  }
+
+  .achievement-card {
+    background-color: #222;
+    color: #ddd;
+  }
+}
 </style>
