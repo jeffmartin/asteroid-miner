@@ -1,12 +1,17 @@
 <template>
   <div class="clicker-game">
     <h1>Idle Miner</h1>
+    <div class="nav-bar">
+      <button @click="currentView = 'game'" :class="{ active: currentView === 'game' }">⛏ Game</button>
+      <button @click="currentView = 'achievements'" :class="{ active: currentView === 'achievements' }">🏆 Achievements</button>
+    </div>
+    <div v-if="currentView === 'game'">
     <button @click="toggleMute" class="mute-button">
       {{ audio.muted ? "🔇 Unmute" : "🔊 Mute" }}
     </button>
     <p>Mined Resources: {{ resources }}</p>
     <p>Resources per Click: {{ clickValue }}</p>
-    <p>Auto-Miners: {{ autoMiners }} ({{ autoMinerRate }} resources/sec)</p>
+    <p>Auto-Miners: {{ autoMiners }} ({{ totalAutoMinerRate }} resources/sec)</p>
 
     <div class="mine-button-wrapper">
       <button @click="mineResource" class="mine-button">Mine</button>
@@ -64,6 +69,22 @@
       </div>
     </div>
     <button @click="resetGame">Reset Game</button>
+    </div>
+    <div v-if="currentView === 'achievements'" class="achievements-tab">
+      <h2>Achievements</h2>
+      <div class="achievement-list">
+        <div
+          class="achievement-card"
+          v-for="ach in achievements"
+          :key="ach.id"
+          :class="{ unlocked: ach.unlocked }"
+          >
+          <h3>{{ ach.unlocked ? ach.name : "???" }}</h3>
+          <p>{{ ach.unlocked ? ach.description : "Unlock to reveal." }}</p>
+        </div>
+      </div>
+    </div>
+
     <transition name="fade">
     <div v-if="currentAchievement" class="achievement-popup">
       <h3>🏆 Achievement Unlocked!</h3>
@@ -81,8 +102,8 @@ export default {
   name: 'Game',
   data() {
     return {
+      currentView: "game", // or "achievements"
       autoMiners:0,
-      autoMinerRate:0,
         resources: 0,
         clickValue: 1,
         upgradeLevel: 0,
@@ -96,21 +117,21 @@ export default {
             baseCost: 50,
             rate: 1,
             owned: 0,
-            image: "/images/shovel.gif"
+            image: "images/shovel.gif"
         },
         {
             name: "Drill Bot",
             baseCost: 300,
             rate: 5,
             owned: 0,
-            image: "/images/drill.gif"
+            image: "images/drill.gif"
         },
         {
             name: "Laser Excavator",
             baseCost: 1000,
             rate: 20,
             owned: 0,
-            image: "/images/laser.gif"
+            image: "images/laser.gif"
         }
         ],
         audio: {
@@ -257,15 +278,16 @@ export default {
       if (this.resources >= cost) {
         this.resources -= cost;
         miner.owned += 1;
+        this.autoMiners += 1;
 
       if (!this.audio.muted && this.audio.buy) this.audio.buy.play();
       this.checkAchievements();
       }
     },
     loadAudio() {
-      this.audio.click = new Audio("/sounds/click.mp3");
-      this.audio.buy = new Audio("/sounds/buy.mp3");
-      this.audio.bgm = new Audio("/sounds/bgm.mp3");
+      this.audio.click = new Audio("sounds/click.mp3");
+      this.audio.buy = new Audio("sounds/buy.mp3");
+      this.audio.bgm = new Audio("sounds/bgm.mp3");
       this.audio.bgm.loop = true;
       this.audio.bgm.volume = 0.3;
       this.audio.bgm.play().catch(() => {
@@ -306,7 +328,9 @@ export default {
         data.minerTypes.forEach((savedMiner, index) => {
           if (this.minerTypes[index]) {
             this.minerTypes[index].owned = savedMiner.owned ?? 0;
+            this.autoMiners += this.minerTypes[index].owned;
           }
+          
         });
       }
 
@@ -360,6 +384,8 @@ export default {
   color: white;
   transition: transform 0.1s ease, background-color 0.2s;
   cursor: pointer;
+  touch-action: manipulation;
+  user-select: none;
 }
 
 .mine-button:hover {
@@ -398,11 +424,12 @@ export default {
 }
 
 button {
-  padding: 10px 20px;
-  margin: 10px;
   font-size: 18px;
+  padding: 14px 20px;
   border-radius: 8px;
-  cursor: pointer;
+  margin: 8px 0;
+  touch-action: manipulation; /* prevents double-tap zoom */
+  cursor:pointer;
 }
 
 button:disabled {
@@ -453,6 +480,7 @@ button:disabled {
   justify-content: center;
   flex-wrap: wrap;
   margin-bottom: 20px;
+  gap: 8px;
 }
 
 .sprite {
@@ -462,10 +490,10 @@ button:disabled {
 }
 
 .sprite img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
+  width: 40px;
+  height: 40px;
 }
+
 .achievement-popup {
   position: fixed;
   bottom: 20px;
@@ -500,10 +528,64 @@ button:disabled {
 .fade-enter, .fade-leave-to {
   opacity: 0;
 }
+
+.nav-bar {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.nav-bar button {
+  padding: 8px 16px;
+  font-weight: bold;
+  border-radius: 8px;
+  cursor: pointer;
+  background: #eee;
+  border: 1px solid #ccc;
+  flex: 1 1 45%;
+  min-width: 120px;
+}
+
+.nav-bar .active {
+  background: #ffd700;
+  border-color: gold;
+}
+
+.achievements-tab {
+  padding: 20px;
+  background: #f4f4f4;
+  border-radius: 10px;
+}
+
+.achievement-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 12px;
+}
+.achievement-card {
+  background: #ddd;
+  padding: 15px;
+  border-radius: 8px;
+  width: 200px;
+  box-shadow: 2px 2px 5px #999;
+  opacity: 0.5;
+  transition: all 0.3s ease;
+}
+
+.achievement-card.unlocked {
+  background: #fff9db;
+  border: 2px solid gold;
+  opacity: 1;
+  transform: scale(1.03);
+}
+
 body {
   background-color: #ffffff;
   color: #333333;
   margin: 0;
+  padding: 0;
   font-family: 'Arial', sans-serif;
   touch-action: manipulation;
 }
@@ -523,6 +605,11 @@ input, select, textarea {
   color: #000000;
 }
 
+#app {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 16px;
+}
 @media (prefers-color-scheme: dark) {
   body {
     background-color: #121212;
